@@ -75,6 +75,7 @@ export class View {
 
     constructor() {
         this.identification_name='';
+
         this.salesRepRecords = new SalesRepObjs();
     }
 
@@ -123,7 +124,10 @@ export class Views {
     }
 
     public addView(pckge: View): void {
-        this.views.push(pckge);
+        let having = this.views.filter(view =>view.identification_name === pckge.identification_name);
+        if (having.length <1 ) {
+            this.views.push(pckge);
+    }
     }
 
     public getViewName(name: string): View | void {
@@ -167,16 +171,17 @@ export class SalesTable {
     // UI components
     private engineType: string
     private dialog: azdata.window.Dialog;
-    private projectNamesDropdown: azdata.DropDownComponent;
+    private viewsByDayMonthDropdown: azdata.DropDownComponent;
     private table: azdata.TableComponent;
     private connectionDropdown: azdata.DropDownComponent;
 
     // Connection details controls
-    private project: string;
+    private view: string;
     private projectNames: string;
     private viewsMAP = new Views();
     private salesRepObjsMAP = new SalesRepObjs();
     private dataObj;
+    private months: String[];
     private project_dropdown;
     private connection_dropdown;
     private databaseName: string;
@@ -193,12 +198,15 @@ export class SalesTable {
         this.getConnections();
         this.getcreateViewNames();
         if (openDialog) {
-            this.project = '';
+            this.view = '';
             this.projectNames='';
             this.dataObj = Array();
             this.connection_dropdown = connection_dropdown;
             this.project_dropdown = project_dropdown;
+            this.months = [ 'January','February','March','April','May','June', 'July', 'August', 'September', 'October', 'November', 'December' ]
+
             this.openDialog(this.engineType)
+            
 
     }
 }
@@ -234,51 +242,29 @@ private async getcreateViewNames(): Promise < Array < string >> {
     AllViews.setIdName("All Records");
     this.viewsMAP.addView(AllViews);
     values.push("All Records");
-
+  
     rows.forEach(element => {
         let eltPackage = new View();
-        let unique = 
-        eltPackage.setIdName(element[4].displayValue);
+        let parsedDate= new Date(element[4].displayValue);
+        let yearMonthVar = this.months[parsedDate.getMonth()] +' | '+ parsedDate.getFullYear();
+        eltPackage.setIdName(yearMonthVar);
         let num = this.viewsMAP;
         num.addView(eltPackage);
-        values.push(element[1].displayValue);
+        values.push();
     });
-    return values;
+    return this.viewsMAP.views.map(v=> v.identification_name);
 
 }
 
-/* public async getConnectionNames(databaseName: string, engineType: string): Promise < string[] > {
+ public async getConnectionNames(): Promise < string[] > {
     let provider: azdata.QueryProvider = azdata.dataprotocol.getProvider < azdata.QueryProvider > (this.connection.providerId, azdata.DataProviderType.QueryProvider);
     let defaultUri = await azdata.connection.getUriForConnection(this.connection.connectionId);
-    let projectId = this.projectMAP.getProjectId(this.project);
-    if (engineType === "eltSnap") {
-            var query = `SELECT project_id, connection_name
-            FROM [eltsnap_v2].[elt].[vw_project_connection]
-            WHERE connection_type='OleDb'`
-
-            var query2 = `SELECT  [connection_name]
-            ,[server_name]
-            ,[database_name]
-            ,[provider]
-            ,[custom_connect_string]
-            ,[connection_expression]
-            FROM [elt].[oledb_connection]`
-
-            var query3 = `SELECT p.[connection_name], p.[server_name]
-            ,p.[database_name]
-            ,p.[provider]
-            ,p.[custom_connect_string]
-            ,p.[connection_expression]
-            FROM [elt].[oledb_connection] p LEFT JOIN 
-            elt.vw_project_connection pp ON pp.connection_name = p.connection_name where pp.connection_name is null`;
-        }
+    let projectId = this.viewsMAP.getProjectId(this.view);
+    
+    
+    var query = `SELECT [Sales Rep],[Bonus],[CommissionPercentage],[VRep],[Month/Year] FROM [dbo].[Bonus]`;
         
-    else if (engineType === "bimlSnap") {
-        query = `SELECT [project_id], [connection_name]
-         FROM [biml].[vw_project_connection] WHERE connection_type='OleDb'`;
         
-    }
-
     let data: any;
     try {
         data = await provider.runQueryAndReturn(defaultUri, query);
@@ -287,69 +273,33 @@ private async getcreateViewNames(): Promise < Array < string >> {
         return;
     }
 
-    let dataConn: any;
-    try {
-        dataConn = await provider.runQueryAndReturn(defaultUri, query2);
-    } catch (error) {
-        vscode.window.showErrorMessage(error.message);
-        return;
-    }
 
-    let dataNoConn: any;
-    try {
-        dataNoConn = await provider.runQueryAndReturn(defaultUri, query3);
-    } catch (error) {
-        vscode.window.showErrorMessage(error.message);
-        return;
-    }
+    data.rows.forEach(element => {
+        let obj: ISalesRepObj = {salesRep: element[0].displayValue , bonus: element[1].displayValue,
+            commissionPercentage: element[2].displayValue, vRep: element[3].displayValue, monthYear: element[4].displayValue};
 
-    try {
-
-        let noCons = new ConnectionObjects;
-        dataNoConn.rows.forEach(element => {
-            let obj: IConnectionObject = {connectionName: element[0].displayValue , serverName: element[1].displayValue,
-                database_name: element[2].displayValue, provider: element[3].displayValue, custom_connect_string: element[4].displayValue, connection_expression: element[5].displayValue};
-    
-            let ConObj = new ConnectionObject(obj);
-            noCons.addConObj(ConObj);
-            });
-    
-            let ProjectNameNoCon = this.projectMAP.getProjectFromId('0');
-            if ( ProjectNameNoCon instanceof Project){
-                ProjectNameNoCon.connectionObjects = noCons;
-            }  
-    
-        
-    } catch (error) {
-        vscode.window.showErrorMessage(error.message);
-        return;        
-    }
-
-
-
-    dataConn.rows.forEach(element => {
-        let obj: IConnectionObject = {connectionName: element[0].displayValue , serverName: element[1].displayValue,
-            database_name: element[2].displayValue, provider: element[3].displayValue, custom_connect_string: element[4].displayValue, connection_expression: element[5].displayValue};
-
-        let ConObj = new ConnectionObject(obj);
-        let num = this.connectionMAP;
-        num.addConObj(ConObj);
+        let SalesObj = new SalesRepObj(obj);
+        let num = this.salesRepObjsMAP;
+        num.addSalesObj(SalesObj);
         });
-    let ProjectName = this.projectMAP.getProjectFromId('01');
-    if ( ProjectName instanceof Project){
-        ProjectName.connectionObjects = this.connectionMAP;
-    }
+        let AllSalesReps = this.viewsMAP.getProjectFromId('All Records');
+        if ( AllSalesReps instanceof View){
+            AllSalesReps.salesRepRecords = this.salesRepObjsMAP;
+        }
 
 
     let values: Array < string > = [];
 
-    data.rows.forEach(element => {
-        let ProjectName = this.projectMAP.getProjectFromId(element[0].displayValue);
-        if ( ProjectName instanceof Project){
-            var conobj = this.connectionMAP.getConObj(element[1].displayValue);
-            if (conobj instanceof ConnectionObject){
+     data.rows.forEach(element => {
+        let parsedDate= new Date(element[4].displayValue);
+        let yearMonthVar = this.months[parsedDate.getMonth()] +' | '+ parsedDate.getFullYear();
+
+        let ViewName = this.viewsMAP.getProjectFromId(yearMonthVar);
+        if ( ViewName instanceof View){
+            var conobj = this.salesRepObjsMAP.getSalesObj(element[0].displayValue);
+            if (conobj instanceof SalesRepObj){
                 try {
-                    ProjectName.connectionObjects.addConObj(conobj);
+                    ViewName.salesRepRecords.addSalesObj(conobj);
                     
                 } catch (error) {
                     console.log(error);
@@ -360,28 +310,28 @@ private async getcreateViewNames(): Promise < Array < string >> {
     return values;
     
 }
- */
+ 
 
-/*  private async getProjectNames():Promise<string[]>{
+  private async getProjectNames():Promise<string[]>{
     
     let projects:string[]= [];
-    this.projectMAP.projects.forEach(element => {
-        projects.push(element.project_name);      
+    this.viewsMAP.views.forEach(element => {
+        projects.push(element.identification_name);      
     });
     return projects;
 }
- */
+ 
 
 
-/* private objArrayToD(conObjs: Array<ConnectionObject>):Array<Array<string>>{
+ private objArrayToD(conObjs: Array<SalesRepObj>):Array<Array<string>>{
     let dataOBJ: Array<Array<string>>=[];
     conObjs.forEach(element => {
-        let singleOBJ:Array<string> = [element.connectionName, element.serverName, element.database_name,element.provider, element.custom_connect_string, element.connection_expression,];
+        let singleOBJ:Array<string> = [element.salesRep, element.bonus, element.commissionPercentage,element.vRep, element.monthYear];
         dataOBJ.push(singleOBJ)
     });
     return dataOBJ;
 }
- */
+ 
 
 
 private openDialog(engineType: string): void {
@@ -434,7 +384,7 @@ private openDialog(engineType: string): void {
 
 
     this.dialog.registerContent(async (view) => {
-       await this.getTabContent(view, 600);
+        await this.getTabContent(view, 600);
     });
 
     azdata.window.openDialog(this.dialog);
@@ -476,7 +426,7 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
     }).component();
 
 
-    this.projectNamesDropdown = view.modelBuilder.dropDown().component();
+    this.viewsByDayMonthDropdown = view.modelBuilder.dropDown().component();
 
     this.table = view.modelBuilder.table().withProperties({
         columns: ['connection name', 'server name', 'database name', 'provider name', 'custom connection string', 'connection expression'],
@@ -492,30 +442,29 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
             if ((element.connectionName + ' | ' + element.serverName === value.selected) || (element.connectionName === value.selected)) {
                 this.connection = element;
 
-                this.projectNamesDropdown.values = [''];
+                this.viewsByDayMonthDropdown.values = [''];
             }
         });
 
         this.viewsMAP = new Views();
         this.salesRepObjsMAP = new SalesRepObjs();
-        this.projectNamesDropdown.values = [''];
-        this.projectNamesDropdown.value = '';
+        this.viewsByDayMonthDropdown.values = [''];
+        this.viewsByDayMonthDropdown.value = '';
         this.table.data;        
-    });
-       /*  this.databaseName = this.connection.databaseName;
-        let projectNames = this.getcreateProjectNames(this.databaseName, this.engineType);
+
+        this.databaseName = this.connection.databaseName;
+        let projectNames = this.getcreateViewNames();
         projectNames.then(result => {
             if (result) {
-                this.projectNamesDropdown.values = result;
-                this.projectNamesStringList = result;
-                this.projectNamesDropdown.value = result[0];
-                this.project = result[0];
+                this.viewsByDayMonthDropdown.values = result;
+                this.dateTimeViewsStringList = result;
+                this.viewsByDayMonthDropdown.value = result[0];
+                this.view = result[0];
 
-                this.getConnectionNames(this.databaseName, this.engineType).then(()=> {
-                    var project_name = this.projectMAP.getProjectName(result[0]);
-                    if (project_name instanceof Project){
-                       let listOfConnNamesForProject =  project_name.getCon_Obj_names();   
-                       let con_bojects = project_name.connectionObjects.connObjects
+                this.getConnectionNames().then(()=> {
+                    var project_name = this.viewsMAP.getProjectFromId(result[0]);
+                    if (project_name instanceof View){
+                       let con_bojects = project_name.salesRepRecords.salesRepObjects
                        this.dataObj = this.objArrayToD(con_bojects);
                         this.table.data = this.dataObj;
 
@@ -526,17 +475,17 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
                
        });
 
-    let projectNames = await this.getProjectNames();
-        this.projectNamesDropdown.values = projectNames;
-        this.projectNamesDropdown.value = "";
+    let viewNames = await this.getProjectNames();
+        this.viewsByDayMonthDropdown.values = viewNames;
+        this.viewsByDayMonthDropdown.value = "";
 
-    this.projectNamesDropdown.onValueChanged(p_name =>{
-    let project = this.projectMAP.getProjectName(p_name.selected)
-    this.project = p_name.selected;
-    if(project instanceof Project)
+    this.viewsByDayMonthDropdown.onValueChanged(p_name =>{
+    let view = this.viewsMAP.getProjectFromId(p_name.selected)
+    this.view = p_name.selected;
+    if(view instanceof View)
     {
-        let con_bojects = project.connectionObjects.connObjects
-        this.dataObj = this.objArrayToD(con_bojects);
+        let salesObjs = view.salesRepRecords.salesRepObjects
+        this.dataObj = this.objArrayToD(salesObjs);
          this.table.data = this.dataObj;
     }
     });
@@ -544,11 +493,11 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
     this.table.onRowSelected(value => {
         if(this.table.selectedRows.length === 1){
         let p = this.table.data[this.table.selectedRows[0]];
-        let obj: IConnectionObject = {connectionName: p[0], serverName: p[1], database_name: p[2], provider: p[3], custom_connect_string: p[4], connection_expression: p[5]};
+        let obj: ISalesRepObj = {salesRep: p[0], bonus: p[1], commissionPercentage: p[2], vRep: p[3], monthYear: p[4]};
 
-        this.ChosenConnectionObject = new ConnectionObject(obj);
+        this.ChosenSalesRepObj = new SalesRepObj(obj);
         }
-    }); */
+    });
 
     let toolbarModel2 = view.modelBuilder.toolbarContainer()
     .withToolbarItems([
@@ -559,7 +508,7 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
         },
         
         {
-        component: this.projectNamesDropdown,
+        component: this.viewsByDayMonthDropdown,
         title: 'Project:'
         }      
     ]).component();
@@ -594,13 +543,13 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
         this.connectionMAP = new ConnectionObjects();
 
         this.databaseName = this.connection.databaseName;
-        let projectNames = this.getcreateProjectNames(this.databaseName, this.engineType);
+        let projectNames = this.getcreateViewNames();
         projectNames.then(result => {
             if (result) {
-                this.projectNamesDropdown.values = result;
+                this.viewsByDayMonthDropdown.values = result;
                 this.projectNamesStringList = result;
-                this.projectNamesDropdown.value = result[0];
-                this.project = result[0];
+                this.viewsByDayMonthDropdown.value = result[0];
+                this.view = result[0];
 
                 this.getConnectionNames(this.databaseName, this.engineType).then(()=> {
                     var project_name = this.projectMAP.getProjectName(result[0]);
@@ -625,20 +574,20 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
             this.connection = this.connections[0];
             this.connectionDropdown.value = this.connection_dropdown;
     
-            this.projectMAP = new Projects();
-            this.connectionMAP = new ConnectionObjects();
+            this.salesRepObjsMAP = new SalesRepObjs();
+            this. = new ConnectionObjects();
     
             this.databaseName = this.connection.databaseName;
-            let projectNames = this.getcreateProjectNames(this.databaseName, this.engineType);
+            let projectNames = this.getcreateViewNames();
             projectNames.then(result => {
                 if (result) {
-                    this.projectNamesDropdown.values = result;
+                    this.viewsByDayMonthDropdown.values = result;
                     this.projectNamesStringList = result;
-                    this.projectNamesDropdown.value = this.project_dropdown;
-                    this.project = this.project_dropdown;
+                    this.viewsByDayMonthDropdown.value = this.project_dropdown;
+                    this.view = this.project_dropdown;
     
                     this.getConnectionNames(this.databaseName, this.engineType).then(()=> {
-                        var project_name = this.projectMAP.getProjectName(this.project);
+                        var project_name = this.projectMAP.getProjectName(this.view);
                             if(project_name instanceof Project)
                             {
                                 let con_bojects = project_name.connectionObjects.connObjects
@@ -653,10 +602,9 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
     
     
             }
- */
 
-    
-           
 
-}
+    } */
+}        
+
 }
