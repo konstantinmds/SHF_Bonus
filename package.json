@@ -1,0 +1,71 @@
+{
+    "name": "elt-snap",
+    "displayName": "eltSnap",
+    "description": "Retrieve query from the eltsnap database",
+    "version": "1.0.15",
+    "publisher": "BITracks",
+    "repository": "https://bi-tracks@dev.azure.com/bi-tracks/eltsnap%20for%20ADS/_git/eltsnap%20for%20ADS",
+    "icon": "images/bitracks.png",
+    "engines": {
+        "vscode": "^1.38.0",
+        "azdata": "*"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:extension.ELTretrieveDialog",
+        "onCommand:extension.ELTsaveDialog",
+        "onCommand:extension.generateSnippets",
+        "onCommand:extension.GenerateHTMLreport",
+        "onCommand:extension.CreateConnections"
+    ],
+    "main": "./out/extension",
+    "contributes": {
+        "commands": [
+            {
+                "command": "extension.ELTretrieveDialog",
+                "title": "eltSnap: Retrieve Query Dialog"
+            },
+            {
+                "command": "extension.ELTsaveDialog",
+                "title": "eltSnap: Save Query Dialog"
+            },
+            {
+                "command": "extension.CreateConnections",
+                "title": "eltSnap: Show Connections Dialog"
+            },
+            {
+                "command": "extension.generateSnippets",
+                "title": "eltSnap: Generate Snippets"
+            },
+            {
+                "command": "extension.GenerateHTMLreport",
+                "title": "eltSnap: Open HTML report"
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install && node ./node_modules/azdata/bin/install",
+        "test": "npm run compile && node ./node_modules/vscode/bin/test",
+        "proposedapi": "node installTypings.js"
+    },
+    "devDependencies": {
+        "@types/mocha": "^2.2.42",
+        "azdata": "1.0.0",
+        "typescript": "^2.6.1",
+        "vscode": "^1.1.6"
+    },
+    "dependencies": {
+        "@types/fs-extra": "^8.1.0",
+        "azuredatastudio-dmpwrapper": "^1.0.1",
+        "fs-extra": "^8.1.0",
+        "generator-sqlops": "^0.10.4",
+        "node-adodb": "^5.0.2",
+        "opn": "^6.0.0",
+        "vscode-nls": "^4.1.1"
+    }
+}
