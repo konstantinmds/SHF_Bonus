@@ -3,8 +3,7 @@
 import * as vscode from 'vscode';
 import * as azdata from 'azdata';
 import * as nls from 'vscode-nls';
-import { ConnectionConf, Project, Projects, ConnectionObject, ConnectionObjects, OpeType } from './configureConnections';
-import { ParameterConnection } from './parameterConnection';
+import { ConnectionConf, Project, Projects, ConnectionObject, ConnectionObjects} from './configureConnections';
 
 const localize = nls.loadMessageBundle();
 
@@ -63,7 +62,6 @@ export class ConnectionInfo {
     constructor(engineType = "eltSnap", openDialog=true, objToEdid: ConnectionObject, connection: azdata.connection.ConnectionProfile,
      connection_dropdown_name, conn_map, project_map, project_dropdown_name) {
         this.engineType = engineType;
-        this.opeType = OpeType.Edit;
         if (openDialog) {
             this.openDialog(this.engineType);
             this.ChosenConnectionObject = objToEdid;   

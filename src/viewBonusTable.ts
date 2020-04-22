@@ -6,71 +6,55 @@ import * as nls from 'vscode-nls';
 import { ConnectionInfo } from './editConnections';
 import {ConnectionADD } from './addConnection';
 import { DeleteConnection } from './deleteConnection';
-import { CloneConnection } from './cloneConnection';
 
 
 const localize = nls.loadMessageBundle();
-const ConfigureDialogTitle: string = localize('confConnectionsDialog.Connection', "Configure data connections");
+const ConfigureDialogTitle: string = localize('confConnectionsDialog.Connection', "Bonus Table");
 
 
-export enum OpeType {
-    Add = "Add",
-    Edit = "Edit"
-}
-export interface IConnectionObject
+export interface ISalesRepObj
 {
-    connectionName: string;
-    serverName: string;
-    database_name: string;
-    provider: string;
-    custom_connect_string: string;
-    connection_expression:string;
-
-
+     salesRep: string;
+     bonus: string;
+     commissionPercentage: string;
+     vRep: string;
+     monthYear: string;
 }
-export class ConnectionObject {
-    public connectionName: string;
-    public serverName: string;
-    public database_name: string;
-    public provider: string;
-    public custom_connect_string: string;
-    public connection_expression:string;
 
-    /**
-     *
-     */
-    constructor(obj: IConnectionObject);
+export class SalesRepObj {
+    public salesRep: string;
+    public bonus: string;
+    public commissionPercentage: string;
+    public vRep: string;
+    public monthYear: string;
+
+
+    constructor(obj: ISalesRepObj);
     constructor(obj: any) {
-        this.connectionName= obj.connectionName && obj.connectionName || "";
-        this.serverName = obj.serverName && obj.serverName || "";
-        this.database_name = obj.database_name && obj.database_name || "";
-        this.provider = obj.provider && obj.provider || "";
-        this.custom_connect_string = obj.custom_connect_string && obj.custom_connect_string || "";
-        this.connection_expression = obj.connection_expression && obj.connection_expression || "";
+        this.salesRep= obj.salesRep && obj.salesRep || "";
+        this.bonus = obj.bonus && obj.bonus || "";
+        this.commissionPercentage = obj.commissionPercentage && obj.commissionPercentage || "";
+        this.vRep = obj.vRep && obj.vRep || "";
+        this.monthYear = obj.monthYear && obj.monthYear || "";
     }
-
-    getId(conn: string){
-        return this.connectionName;
-    }
-
     
     }
 
-export class ConnectionObjects{
-    public connObjects: Array <ConnectionObject>;
+export class SalesRepObjs{
+    public salesRepObjects: Array <SalesRepObj>;
 
     constructor() {
-        this.connObjects = new Array < ConnectionObject > ();
+        this.salesRepObjects = new Array < SalesRepObj > ();
     }
 
-    public addConObj(pckge: ConnectionObject): void {
-        this.connObjects.push(pckge);
+    public addSalesObj(pckge: SalesRepObj): void {
+        this.salesRepObjects.push(pckge);
     }
 
-    public getConObj(name: string): ConnectionObject | void {
-        for (let index = 0; index < this.connObjects.length; index++) {
-            const element = this.connObjects[index];
-            if (name === element.connectionName) {
+    public getSalesObj(name: string): SalesRepObj | void {
+        for (let index = 0; index < this.salesRepObjects.length; index++) {
+            const element = this.salesRepObjects[index];
+            if (name === element.salesRep) {
                 return element;
         }
     }
@@ -79,79 +63,73 @@ export class ConnectionObjects{
     public getConnNames(): string[]
     {
         let conNames = [];
-        this.connObjects.forEach(element => {
-               conNames.push(element.connectionName);
+        this.salesRepObjects.forEach(element => {
+               conNames.push(element.salesRep);
         });
         return conNames;
     }
 }
-export class Project {
-    public id!: string;
-    public project_name!: string;
-    public connectionObjects: ConnectionObjects;
+export class View {
+    public identification_name!: string;
+    public salesRepRecords : SalesRepObjs;
 
     constructor() {
-        this.id ='';
-        this.project_name='';
-        this.connectionObjects = new ConnectionObjects();
+        this.identification_name='';
+        this.salesRepRecords = new SalesRepObjs();
     }
 
     public getId(): string {
-        return this.id;
+        return this.identification_name;
     }
 
-    public getCon_Obj_names(): string[]{
+    public getSalesRepObjnames(): string[]{
         let l = []
-        this.connectionObjects.connObjects.forEach(element => {
-            l.push(element.connectionName)
+        this.salesRepRecords.salesRepObjects.forEach(element => {
+            l.push(element.salesRep)
         });
         return l;
     }
 
-    public getConnObj(cName :string): ConnectionObject{
-        for (let index = 0; index < this.connectionObjects.connObjects.length; index++) {
-            const element = this.connectionObjects.connObjects[index];
-            if (element.connectionName === cName){
+    public getSalesRepObj(cName :string): SalesRepObj{
+        for (let index = 0; index < this.salesRepRecords.salesRepObjects.length; index++) {
+            const element = this.salesRepRecords.salesRepObjects[index];
+            if (element.salesRep === cName){
                 return element;
             }
             
         }
-        let obj: IConnectionObject = {connectionName:'', serverName:'',database_name: '', provider: '',custom_connect_string: '',connection_expression: ''};
-        return new ConnectionObject(obj);
-
-
+        let obj: ISalesRepObj = {bonus:'', commissionPercentage:'',monthYear: '', salesRep: '',vRep: ''};
+        return new SalesRepObj(obj);
     }
 
-    public getConnObjs() {
-        return this.connectionObjects;
+    public getSaleRepObjs() {
+        return this.salesRepRecords;
     }
 
-    public setId(id: string) {
-        this.id = id;
-    }
-    public getProjectName(): string {
-        return this.project_name;
+    public getViewName(): string {
+        return this.identification_name;
     }
 
-    public setProjectName(v: string) {
-        this.project_name = v;
+    public setIdName(v: string) {
+        this.identification_name = v;
     }
 }
-export class Projects {
-    public projects: Array < Project > ;
+
+export class Views {
+    public views: Array < View > ;
 
     constructor() {
-        this.projects = new Array < Project > ();
+        this.views = new Array < View > ();
     }
 
-    public addProject(pckge: Project): void {
-        this.projects.push(pckge);
+    public addView(pckge: View): void {
+        this.views.push(pckge);
     }
 
-    public getProjectName(name: string): Project | void {
-        for (let index = 0; index < this.projects.length; index++) {
-            const element = this.projects[index];
-            if (name === element.project_name) {
+    public getViewName(name: string): View | void {
+        for (let index = 0; index < this.views.length; index++) {
+            const element = this.views[index];
+            if (name === element.identification_name) {
                 return element;
             }
         }
@@ -159,20 +137,20 @@ export class Projects {
     }
 
     public getProjectId(name: string): string {
-        for (let index = 0; index < this.projects.length; index++) {
-            const element = this.projects[index];
-            if (name === element.project_name) {
-                return element.id;
+        for (let index = 0; index < this.views.length; index++) {
+            const element = this.views[index];
+            if (name === element.identification_name) {
+                return element.identification_name;
             }
         }
         return '';
         
     }
 
-    public getProjectFromId(id:string): Project|void{
-        for (let index = 0; index < this.projects.length; index++) {
-            const element = this.projects[index];
-            if (id === element.id) {
+    public getProjectFromId(id:string): View|void{
+        for (let index = 0; index < this.views.length; index++) {
+            const element = this.views[index];
+            if (id === element.identification_name) {
                 return element;
                 }
     
@@ -184,7 +162,7 @@ export class Projects {
 }
 
 
-export class ConnectionConf {
+export class SalesTable {
 
     // UI components
     private engineType: string
@@ -193,20 +171,17 @@ export class ConnectionConf {
     private table: azdata.TableComponent;
     private connectionDropdown: azdata.DropDownComponent;
 
-
-
-
     // Connection details controls
     private project: string;
     private projectNames: string;
-    private projectMAP = new Projects();
-    private connectionMAP = new ConnectionObjects();
+    private viewsMAP = new Views();
+    private salesRepObjsMAP = new SalesRepObjs();
     private dataObj;
     private project_dropdown;
     private connection_dropdown;
     private databaseName: string;
-    private ChosenConnectionObject: ConnectionObject;
-    private projectNamesStringList: string[];
+    private ChosenSalesRepObj: SalesRepObj;
+    private dateTimeViewsStringList: string[];
 
     private connection: azdata.connection.ConnectionProfile;
     private connections: azdata.connection.ConnectionProfile[];
@@ -214,9 +189,9 @@ export class ConnectionConf {
 
 
 
-    constructor(engineType = "eltSnap", openDialog=true, connection_dropdown = '', project_dropdown = '') {
-        this.engineType = engineType;
+    constructor(openDialog=true, connection_dropdown = '', project_dropdown = '') {
         this.getConnections();
+        this.getcreateViewNames();
         if (openDialog) {
             this.project = '';
             this.projectNames='';
@@ -228,14 +203,8 @@ export class ConnectionConf {
     }
 }
 
-
-private async getcreateProjectNames(databaseName: string, engineType: string): Promise < Array < string >> {
-    if (engineType === "eltSnap") {
-        var projectQuery: string = `select [project_id],[project_name] from [${databaseName}].[elt].[project]`;
-    } else if (engineType === "bimlSnap") {
-        var projectQuery: string = `select [project_id],[project_name] from [${databaseName}].[biml].[project]`;
-    }
-
+private async getcreateViewNames(): Promise < Array < string >> {
+    var projectQuery: string = `SELECT [Sales Rep],[Bonus],[CommissionPercentage],[VRep],[Month/Year] FROM [dbo].[Bonus]`;
 
 
     let provider: azdata.QueryProvider = azdata.dataprotocol.getProvider < azdata.QueryProvider > (this.connection.providerId, azdata.DataProviderType.QueryProvider);
@@ -248,7 +217,7 @@ private async getcreateProjectNames(databaseName: string, engineType: string): P
 
         } catch (error) {
             if (error.message == 'Query has no results to return') {
-                vscode.window.showErrorMessage("The schema is not compatible with dialog type");
+                vscode.window.showErrorMessage("Check your connection or database name");
             } else {
                 vscode.window.showErrorMessage(error.message); 
             }
@@ -259,35 +228,26 @@ private async getcreateProjectNames(databaseName: string, engineType: string): P
     let rows = data.rows;
 
     let values: Array < string > = [];
-    let noProject = new Project();
 
 
-    let AllconPro = new Project();
-    AllconPro.setId("01");
-    AllconPro.setProjectName("All Connections");
-    this.projectMAP.addProject(AllconPro);
-    values.push("All Connections");
-
-    noProject.setId("0");
-    noProject.setProjectName("Conections without Project");
-    this.projectMAP.addProject(noProject);
-    values.push("Conections without Project");
-
-
+    let AllViews = new View();
+    AllViews.setIdName("All Records");
+    this.viewsMAP.addView(AllViews);
+    values.push("All Records");
 
     rows.forEach(element => {
-        let eltPackage = new Project();
-        eltPackage.setId(element[0].displayValue);
-        eltPackage.setProjectName(element[1].displayValue);
-        let num = this.projectMAP;
-        num.addProject(eltPackage);
+        let eltPackage = new View();
+        let unique = 
+        eltPackage.setIdName(element[4].displayValue);
+        let num = this.viewsMAP;
+        num.addView(eltPackage);
         values.push(element[1].displayValue);
     });
     return values;
 
 }
 
-public async getConnectionNames(databaseName: string, engineType: string): Promise < string[] > {
+/* public async getConnectionNames(databaseName: string, engineType: string): Promise < string[] > {
     let provider: azdata.QueryProvider = azdata.dataprotocol.getProvider < azdata.QueryProvider > (this.connection.providerId, azdata.DataProviderType.QueryProvider);
     let defaultUri = await azdata.connection.getUriForConnection(this.connection.connectionId);
     let projectId = this.projectMAP.getProjectId(this.project);
@@ -400,8 +360,9 @@ public async getConnectionNames(databaseName: string, engineType: string): Promi
     return values;
     
 }
+ */
 
-private async getProjectNames():Promise<string[]>{
+/*  private async getProjectNames():Promise<string[]>{
     
     let projects:string[]= [];
     this.projectMAP.projects.forEach(element => {
@@ -409,8 +370,10 @@ private async getProjectNames():Promise<string[]>{
     });
     return projects;
 }
+ */
 
-private objArrayToD(conObjs: Array<ConnectionObject>):Array<Array<string>>{
+
+/* private objArrayToD(conObjs: Array<ConnectionObject>):Array<Array<string>>{
     let dataOBJ: Array<Array<string>>=[];
     conObjs.forEach(element => {
         let singleOBJ:Array<string> = [element.connectionName, element.serverName, element.database_name,element.provider, element.custom_connect_string, element.connection_expression,];
@@ -418,6 +381,8 @@ private objArrayToD(conObjs: Array<ConnectionObject>):Array<Array<string>>{
     });
     return dataOBJ;
 }
+ */
+
 
 private openDialog(engineType: string): void {
 
@@ -431,20 +396,20 @@ private openDialog(engineType: string): void {
     let customButton1 = azdata.window.createButton('Add');
     customButton1.onClick(
         () => { 
-            let obj: IConnectionObject = {connectionName:'', serverName:'',database_name: '', provider: '',custom_connect_string: '',connection_expression: ''};
-            new ConnectionADD(this.engineType, true, this.connection, this.projectMAP, this.connectionMAP, this.project, obj);
+            let obj: ISalesRepObj = {bonus:'', commissionPercentage:'',monthYear: '', salesRep: '',vRep: ''};
+            //new ConnectionADD(this.engineType, true, this.connection, this.projectMAP, this.connectionMAP, this.project, obj);
     azdata.window.closeDialog(this.dialog)
         }
     );
     
     let customButton2 = azdata.window.createButton('Delete');
-    customButton2.onClick(() => { this.ChosenConnectionObject ? new DeleteConnection(this.engineType, true, this.connection, this.ChosenConnectionObject.connectionName, this.connectionMAP, this.projectMAP, this.connectionDropdown.value as string, this.project) : this.dialog.message={text: " You need to choose one connection"} 
-    if(this.ChosenConnectionObject){
-        azdata.window.closeDialog(this.dialog);
-    }
-    });
+    //customButton2.onClick(() => { this.ChosenConnectionObject ? new DeleteConnection(this.engineType, true, this.connection, this.ChosenConnectionObject.connectionName, this.connectionMAP, this.projectMAP, this.connectionDropdown.value as string, this.project) : this.dialog.message={text: " You need to choose one connection"} 
+    //if(this.ChosenConnectionObject){
+      //  azdata.window.closeDialog(this.dialog);
+    //}
+   // });
 
-    let customButton3 = azdata.window.createButton('Clone');
+/*     let customButton3 = azdata.window.createButton('Clone');
     customButton3.onClick(() => { this.ChosenConnectionObject ? new CloneConnection(this.engineType, true, this.connection, this.ChosenConnectionObject.connectionName, this.connectionMAP, this.projectMAP, this.connectionDropdown.value as string, this.project) : this.dialog.message={text: " You need to choose one connection"}
     if(this.ChosenConnectionObject){
         azdata.window.closeDialog(this.dialog);
@@ -458,18 +423,18 @@ private openDialog(engineType: string): void {
     azdata.window.closeDialog(this.dialog);
          }
             });
-
+ */
 
     this.dialog.okButton.hidden=true;
     
     this.dialog.cancelButton.label = 'Done';
 
-    this.dialog.customButtons = [customButton1, customButton2,customButton3, customButton4];
+   // this.dialog.customButtons = [customButton1, customButton2,customButton3, customButton4];
 
 
 
     this.dialog.registerContent(async (view) => {
-        await this.getTabContent(view, 600);
+       await this.getTabContent(view, 600);
     });
 
     azdata.window.openDialog(this.dialog);
@@ -531,13 +496,13 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
             }
         });
 
-        this.projectMAP = new Projects();
-        this.connectionMAP = new ConnectionObjects();
+        this.viewsMAP = new Views();
+        this.salesRepObjsMAP = new SalesRepObjs();
         this.projectNamesDropdown.values = [''];
         this.projectNamesDropdown.value = '';
         this.table.data;        
-
-        this.databaseName = this.connection.databaseName;
+    });
+       /*  this.databaseName = this.connection.databaseName;
         let projectNames = this.getcreateProjectNames(this.databaseName, this.engineType);
         projectNames.then(result => {
             if (result) {
@@ -583,7 +548,7 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
 
         this.ChosenConnectionObject = new ConnectionObject(obj);
         }
-    });
+    }); */
 
     let toolbarModel2 = view.modelBuilder.toolbarContainer()
     .withToolbarItems([
@@ -616,7 +581,7 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
 
     await view.initializeModel(flexModel);
 
-    if (this.connection_dropdown  === '' && this.project_dropdown === ''){
+/*     if (this.connection_dropdown  === '' && this.project_dropdown === ''){
 
     
 
@@ -688,9 +653,10 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
     
     
             }
+ */
 
+    
+           
 
-    }
-}        
-
+}
 }
