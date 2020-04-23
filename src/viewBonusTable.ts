@@ -3,8 +3,8 @@
 import * as vscode from 'vscode';
 import * as azdata from 'azdata';
 import * as nls from 'vscode-nls';
-import { ConnectionInfo } from './editConnections';
-import {ConnectionADD } from './addConnection';
+import { SalesRepEdit } from './editSalesRepEntry';
+import {SalesRepADD } from './addSalesRepEntry';
 import { DeleteConnection } from './deleteConnection';
 
 
@@ -13,13 +13,13 @@ const ConfigureDialogTitle: string = localize('confConnectionsDialog.Connection'
 
 
 export interface ISalesRepObj
-{
-     salesRep: string;
-     bonus: string;
-     commissionPercentage: string;
-     vRep: string;
-     monthYear: string;
-}
+    {
+        salesRep: string;
+        bonus: string;
+        commissionPercentage: string;
+        vRep: string;
+        monthYear: string;
+    }
 
 export class SalesRepObj {
     public salesRep: string;
@@ -51,10 +51,10 @@ export class SalesRepObjs{
         this.salesRepObjects.push(pckge);
     }
 
-    public getSalesObj(name: string): SalesRepObj | void {
+    public getSalesObj(name: string, date: string): SalesRepObj | void {
         for (let index = 0; index < this.salesRepObjects.length; index++) {
             const element = this.salesRepObjects[index];
-            if (name === element.salesRep) {
+            if ((name === element.salesRep) && (date=== element.monthYear)) {
                 return element;
         }
     }
@@ -182,7 +182,7 @@ export class SalesTable {
     private salesRepObjsMAP = new SalesRepObjs();
     private dataObj;
     private months: String[];
-    private project_dropdown;
+    private view_dropdown: string;
     private connection_dropdown;
     private databaseName: string;
     private ChosenSalesRepObj: SalesRepObj;
@@ -194,7 +194,7 @@ export class SalesTable {
 
 
 
-    constructor(openDialog=true, connection_dropdown = '', project_dropdown = '') {
+    constructor(openDialog=true, connection_dropdown = '', view_dropdown = '') {
         this.getConnections();
         this.getcreateViewNames();
         if (openDialog) {
@@ -202,7 +202,7 @@ export class SalesTable {
             this.projectNames='';
             this.dataObj = Array();
             this.connection_dropdown = connection_dropdown;
-            this.project_dropdown = project_dropdown;
+            this.view_dropdown = view_dropdown;
             this.months = [ 'January','February','March','April','May','June', 'July', 'August', 'September', 'October', 'November', 'December' ]
 
             this.openDialog(this.engineType)
@@ -296,7 +296,7 @@ private async getcreateViewNames(): Promise < Array < string >> {
 
         let ViewName = this.viewsMAP.getProjectFromId(yearMonthVar);
         if ( ViewName instanceof View){
-            var conobj = this.salesRepObjsMAP.getSalesObj(element[0].displayValue);
+            var conobj = this.salesRepObjsMAP.getSalesObj(element[0].displayValue, element[4].displayValue);
             if (conobj instanceof SalesRepObj){
                 try {
                     ViewName.salesRepRecords.addSalesObj(conobj);
@@ -347,7 +347,7 @@ private openDialog(engineType: string): void {
     customButton1.onClick(
         () => { 
             let obj: ISalesRepObj = {bonus:'', commissionPercentage:'',monthYear: '', salesRep: '',vRep: ''};
-            //new ConnectionADD(this.engineType, true, this.connection, this.projectMAP, this.connectionMAP, this.project, obj);
+            new SalesRepADD(true, this.connection, this.viewsMAP, this.salesRepObjsMAP, this.view, obj);
     azdata.window.closeDialog(this.dialog)
         }
     );
@@ -379,7 +379,7 @@ private openDialog(engineType: string): void {
     
     this.dialog.cancelButton.label = 'Done';
 
-   // this.dialog.customButtons = [customButton1, customButton2,customButton3, customButton4];
+    this.dialog.customButtons = [customButton1, customButton2];
 
 
 
@@ -429,7 +429,7 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
     this.viewsByDayMonthDropdown = view.modelBuilder.dropDown().component();
 
     this.table = view.modelBuilder.table().withProperties({
-        columns: ['connection name', 'server name', 'database name', 'provider name', 'custom connection string', 'connection expression'],
+        columns: ['Sales representative name', 'Bonus', 'Commission Percentage', 'VRep', 'Month/Year'],
         height: 1000
     }).component();
 
@@ -475,6 +475,7 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
                
        });
 
+    
     let viewNames = await this.getProjectNames();
         this.viewsByDayMonthDropdown.values = viewNames;
         this.viewsByDayMonthDropdown.value = "";
@@ -509,7 +510,7 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
         
         {
         component: this.viewsByDayMonthDropdown,
-        title: 'Project:'
+        title: 'Year/Month Filter:'
         }      
     ]).component();
 
