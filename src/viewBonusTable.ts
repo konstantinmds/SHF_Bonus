@@ -222,9 +222,9 @@ private async getcreateViewNames(): Promise < Array < string >> {
 
     try {
         data = await provider.runQueryAndReturn(defaultUri, projectQuery);
-        //allCons = await provider.runQueryAndReturn(defaultUri, allConsQu);
-
-        } catch (error) {
+        } 
+        
+    catch (error) {
             if (error.message == 'Query has no results to return') {
                 vscode.window.showErrorMessage("Check your connection or database name");
             } else {

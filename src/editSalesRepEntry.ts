@@ -64,14 +64,18 @@ export class SalesRepEdit {
             this.project_dropdown_name = project_dropdown_name;
             this.salesRepsMAP = conn_map;
             this.viewsMAP = project_map;
-            this.project_id = this.viewsMAP.getProjectId(project_dropdown_name);
+            this.project_id = project_dropdown_name;
 
     }
 }
 
-    private async updateSalesRep(name: string,srv: string,db: string,prv: string,ccsname :string)
+    private async updateSalesRep(name: string,bonus: string,percentage: string,vrep: string,monthYear :Date)
+
     {
-        let storedProc = `EXEC [elt].[Save OleDB Connection] '${name}', '${srv}', '${db}', '${prv}', '${ccsname}'`;
+        let monthYear_ = monthYear.toLocaleDateString();
+        let storedProc = `UPDATE dbo.Bonus_Table SET Sales_Rep ='${name}', Bonus='${bonus}',Commission_Percentage='${percentage}',VRep='${vrep}',[Date]='${monthYear_}' 
+        where Sales_Rep='${this.ChosenSalesRepObject.salesRep}' and [Date]='${this.ChosenSalesRepObject.monthYear}'`;
+
         let provider: azdata.QueryProvider = azdata.dataprotocol.getProvider < azdata.QueryProvider > (this.connection.providerId, azdata.DataProviderType.QueryProvider);
         let defaultUri = await azdata.connection.getUriForConnection(this.connection.connectionId);
 
@@ -101,8 +105,8 @@ export class SalesRepEdit {
         packagesTab.content = 'getpackage';
         this.dialog.content = [packagesTab];
         let customButton1 = azdata.window.createButton('Update');
-        customButton1.onClick(() =>this.connection ?  this.updateSalesRep(this.connectionName_,this.bonus_,this.commissionPercent_
-                ,this.monthYearField_, this.customConnect_) : this.dialog.message ={text: this.NoConnectionObject}  
+        customButton1.onClick(() =>this.connection ?  this.updateSalesRep(this.connectionName_,this.bonus_,this.commissionPercent_,
+                this.vRep_, new Date(this.monthYearField_)) : this.dialog.message ={text: this.NoConnectionObject}  
     );
      
         this.dialog.registerContent(async (view) => {
@@ -117,16 +121,11 @@ export class SalesRepEdit {
             }
         );
     
-
         this.dialog.customButtons = [customButton1,customButton2]
         this.dialog.okButton.hidden = true;
         this.dialog.cancelButton.hidden = true;
 
-
-        
         azdata.window.openDialog(this.dialog);
-
-
 
     }
 
@@ -139,22 +138,30 @@ export class SalesRepEdit {
 
         ///changing values
              
-        this.bonusField = view.modelBuilder.inputBox().component();
+        this.bonusField = view.modelBuilder.inputBox().withProperties({
+            inputType: "number" 
+        }).component();
         this.bonusField.onTextChanged(value => {
             this.bonus_ = value;
         });
         
-        this.commissionPercentField = view.modelBuilder.inputBox().component();
+        this.commissionPercentField = view.modelBuilder.inputBox().withProperties({
+            inputType: "number" 
+        }).component();
         this.commissionPercentField.onTextChanged(value => {
             this.commissionPercent_ = value;
         });
 
-        this.vRepField = view.modelBuilder.inputBox().component();
+        this.vRepField = view.modelBuilder.inputBox().withProperties({
+            inputType: "number" 
+        }).component();
         this.vRepField.onTextChanged(value => {
             this.vRep_ = value;
         });
 
-        this.monthYearField = view.modelBuilder.inputBox().component();
+        this.monthYearField = view.modelBuilder.inputBox().withProperties({
+            inputType: "date" 
+        }).component();
         this.monthYearField.onTextChanged(value => {
             this.monthYearField_ = value;
         });
@@ -166,7 +173,7 @@ export class SalesRepEdit {
         this.connectionName_ =this.ChosenSalesRepObject.salesRep;
         this.bonus_= this.bonusField.value = this.ChosenSalesRepObject.bonus;
         this.commissionPercent_= this.commissionPercentField.value = this.ChosenSalesRepObject.commissionPercentage;
-        this.monthYearField_=this.monthYearField.value = this.ChosenSalesRepObject.monthYear;
+        this.monthYearField_=this.monthYearField.value = this.ChosenSalesRepObject.monthYear.toString().split(' ')[0];
         this.vRep_ = this.vRepField.value = this.ChosenSalesRepObject.vRep;
     
                 

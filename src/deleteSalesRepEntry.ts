@@ -47,7 +47,7 @@ export class SalesRepDelete {
     private salesRepName_:string;  
     private salesRepDate: Date;
     private connection_dropdown_name;
-    private this.datetoShow: string;
+    private datetoShow: string;
 
 
     private connection: azdata.connection.ConnectionProfile;
