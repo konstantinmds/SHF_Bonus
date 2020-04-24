@@ -5,7 +5,7 @@ import * as azdata from 'azdata';
 import * as nls from 'vscode-nls';
 import { SalesRepEdit } from './editSalesRepEntry';
 import {SalesRepADD } from './addSalesRepEntry';
-import { DeleteConnection } from './deleteConnection';
+import { SalesRepDelete } from './deleteSalesRepEntry';
 
 
 const localize = nls.loadMessageBundle();
@@ -130,13 +130,14 @@ export class Views {
     }
     }
 
-    public getViewName(name: string): View | void {
+    public getViewName(name: string): View {
         for (let index = 0; index < this.views.length; index++) {
             const element = this.views[index];
             if (name === element.identification_name) {
                 return element;
             }
         }
+        return new View();
     
     }
 
@@ -212,7 +213,7 @@ export class SalesTable {
 }
 
 private async getcreateViewNames(): Promise < Array < string >> {
-    var projectQuery: string = `SELECT [Sales Rep],[Bonus],[CommissionPercentage],[VRep],[Month/Year] FROM [dbo].[Bonus]`;
+    var projectQuery: string = `SELECT [Sales_Rep],[Bonus],[Commission_Percentage],[VRep],[Date] FROM [dbo].[Bonus_Table] ORDER BY DATE DESC`;
 
 
     let provider: azdata.QueryProvider = azdata.dataprotocol.getProvider < azdata.QueryProvider > (this.connection.providerId, azdata.DataProviderType.QueryProvider);
@@ -262,9 +263,9 @@ private async getcreateViewNames(): Promise < Array < string >> {
     let projectId = this.viewsMAP.getProjectId(this.view);
     
     
-    var query = `SELECT [Sales Rep],[Bonus],[CommissionPercentage],[VRep],[Month/Year] FROM [dbo].[Bonus]`;
+    var query = `SELECT [Sales_Rep],[Bonus],[Commission_Percentage],[VRep],[Date] FROM [dbo].[Bonus_Table] ORDER BY DATE DESC`;
         
-        
+
     let data: any;
     try {
         data = await provider.runQueryAndReturn(defaultUri, query);
@@ -351,13 +352,14 @@ private openDialog(engineType: string): void {
     azdata.window.closeDialog(this.dialog)
         }
     );
-    
+    //    constructor(openDialog=true, connection, salesRepName, salesRepDate, connection_dropdown_name, project_name) {
+
     let customButton2 = azdata.window.createButton('Delete');
-    //customButton2.onClick(() => { this.ChosenConnectionObject ? new DeleteConnection(this.engineType, true, this.connection, this.ChosenConnectionObject.connectionName, this.connectionMAP, this.projectMAP, this.connectionDropdown.value as string, this.project) : this.dialog.message={text: " You need to choose one connection"} 
-    //if(this.ChosenConnectionObject){
-      //  azdata.window.closeDialog(this.dialog);
-    //}
-   // });
+    customButton2.onClick(() => { this.ChosenSalesRepObj ? new SalesRepDelete( true, this.connection, this.ChosenSalesRepObj.salesRep, this.ChosenSalesRepObj.monthYear, this.connectionDropdown.value as string, this.view) : this.dialog.message={text: " You need to choose one record"} 
+    if(this.ChosenSalesRepObj){
+        azdata.window.closeDialog(this.dialog);
+    }
+    });
 
 /*     let customButton3 = azdata.window.createButton('Clone');
     customButton3.onClick(() => { this.ChosenConnectionObject ? new CloneConnection(this.engineType, true, this.connection, this.ChosenConnectionObject.connectionName, this.connectionMAP, this.projectMAP, this.connectionDropdown.value as string, this.project) : this.dialog.message={text: " You need to choose one connection"}
@@ -365,21 +367,21 @@ private openDialog(engineType: string): void {
         azdata.window.closeDialog(this.dialog);
     }
     });
-
+ */
 
     let customButton4 = azdata.window.createButton('Edit');
-    customButton4.onClick(() => { this.ChosenConnectionObject ? new ConnectionInfo(this.engineType, true, this.ChosenConnectionObject,this.connection, this.connectionDropdown.value as string,this.connectionMAP, this.projectMAP, this.project) : this.dialog.message={text: " You need to choose one connection"}
-    if(this.ChosenConnectionObject){
+    customButton4.onClick(() => { this.ChosenSalesRepObj ? new SalesRepEdit(true, this.ChosenSalesRepObj,this.connection, this.connectionDropdown.value as string,this.salesRepObjsMAP, this.viewsMAP, this.view) : this.dialog.message={text: " You need to choose one record"}
+    if(this.ChosenSalesRepObj){
     azdata.window.closeDialog(this.dialog);
          }
             });
- */
+ 
 
     this.dialog.okButton.hidden=true;
     
     this.dialog.cancelButton.label = 'Done';
 
-    this.dialog.customButtons = [customButton1, customButton2];
+    this.dialog.customButtons = [customButton1, customButton2, customButton4];
 
 
 
@@ -417,9 +419,6 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
         }
     });
 
-
-
-
     this.connectionDropdown = view.modelBuilder.dropDown().withProperties({
         value: '',
         values: connectionNames
@@ -432,8 +431,6 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
         columns: ['Sales representative name', 'Bonus', 'Commission Percentage', 'VRep', 'Month/Year'],
         height: 1000
     }).component();
-
-
 
     // On connection change 
 
@@ -467,15 +464,11 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
                        let con_bojects = project_name.salesRepRecords.salesRepObjects
                        this.dataObj = this.objArrayToD(con_bojects);
                         this.table.data = this.dataObj;
-
                 }});
                         }
-                        
-                        });
-               
+                    });               
        });
 
-    
     let viewNames = await this.getProjectNames();
         this.viewsByDayMonthDropdown.values = viewNames;
         this.viewsByDayMonthDropdown.value = "";
@@ -490,7 +483,6 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
          this.table.data = this.dataObj;
     }
     });
-
     this.table.onRowSelected(value => {
         if(this.table.selectedRows.length === 1){
         let p = this.table.data[this.table.selectedRows[0]];
@@ -499,7 +491,6 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
         this.ChosenSalesRepObj = new SalesRepObj(obj);
         }
     });
-
     let toolbarModel2 = view.modelBuilder.toolbarContainer()
     .withToolbarItems([
         {
@@ -531,41 +522,36 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
 
     await view.initializeModel(flexModel);
 
-/*     if (this.connection_dropdown  === '' && this.project_dropdown === ''){
-
-    
+     if (this.connection_dropdown  === '' && this.view_dropdown === ''){
 
     if (this.connections.length == 1) {
         this.connection = this.connections[0];
         let connectionName = this.connection.connectionName + ' | ' + this.connection.serverName;
         this.connectionDropdown.value = connectionName;
 
-        this.projectMAP = new Projects();
-        this.connectionMAP = new ConnectionObjects();
+        this.viewsMAP = new Views();
+        this.salesRepObjsMAP = new SalesRepObjs();
 
         this.databaseName = this.connection.databaseName;
         let projectNames = this.getcreateViewNames();
         projectNames.then(result => {
             if (result) {
                 this.viewsByDayMonthDropdown.values = result;
-                this.projectNamesStringList = result;
+                this.dateTimeViewsStringList = result;
                 this.viewsByDayMonthDropdown.value = result[0];
                 this.view = result[0];
 
-                this.getConnectionNames(this.databaseName, this.engineType).then(()=> {
-                    var project_name = this.projectMAP.getProjectName(result[0]);
-                        if(project_name instanceof Project)
+                this.getConnectionNames().then(()=> {
+                    var project_name = this.viewsMAP.getProjectFromId(result[0]);
+                        if(project_name instanceof View)
                         {
-                            let con_bojects = project_name.connectionObjects.connObjects
+                            let con_bojects = project_name.salesRepRecords.salesRepObjects
                             this.dataObj = this.objArrayToD(con_bojects);
                              this.table.data = this.dataObj;
                         }
-                        
                         });
-
             }});
 }
-
     }
     else
 
@@ -574,24 +560,22 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
 
             this.connection = this.connections[0];
             this.connectionDropdown.value = this.connection_dropdown;
-    
             this.salesRepObjsMAP = new SalesRepObjs();
-            this. = new ConnectionObjects();
-    
+            this.viewsMAP = new Views();
             this.databaseName = this.connection.databaseName;
             let projectNames = this.getcreateViewNames();
             projectNames.then(result => {
                 if (result) {
                     this.viewsByDayMonthDropdown.values = result;
-                    this.projectNamesStringList = result;
-                    this.viewsByDayMonthDropdown.value = this.project_dropdown;
-                    this.view = this.project_dropdown;
+                    this.dateTimeViewsStringList = result;
+                    this.viewsByDayMonthDropdown.value = (this.view_dropdown=== "New month entry") ? result[1] : this.view_dropdown;
+                    this.view = this.view_dropdown;
     
-                    this.getConnectionNames(this.databaseName, this.engineType).then(()=> {
-                        var project_name = this.projectMAP.getProjectName(this.view);
-                            if(project_name instanceof Project)
+                    this.getConnectionNames().then(()=> {
+                        var project_name = this.viewsMAP.getProjectFromId(this.view);
+                            if(project_name instanceof View)
                             {
-                                let con_bojects = project_name.connectionObjects.connObjects
+                                let con_bojects = project_name.salesRepRecords.salesRepObjects
                                 this.dataObj = this.objArrayToD(con_bojects);
                                  this.table.data = this.dataObj;
                             }
@@ -605,7 +589,7 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
             }
 
 
-    } */
+    } 
 }        
 
 }

@@ -54,9 +54,8 @@ export class SalesRepEdit {
     private connection: azdata.connection.ConnectionProfile;
     private connections: azdata.connection.ConnectionProfile[];
 
-    constructor(engineType = "eltSnap", openDialog=true, objToEdid: SalesRepObj, connection: azdata.connection.ConnectionProfile,
+    constructor(openDialog=true, objToEdid: SalesRepObj, connection: azdata.connection.ConnectionProfile,
      connection_dropdown_name, conn_map, project_map, project_dropdown_name) {
-        this.engineType = engineType;
         if (openDialog) {
             this.openDialog();
             this.ChosenSalesRepObject = objToEdid;   

@@ -3,7 +3,7 @@
 import * as vscode from 'vscode';
 import * as azdata from 'azdata';
 import * as nls from 'vscode-nls';
-import { ConnectionConf, Project, Projects, ConnectionObject, ConnectionObjects } from './configureConnections';
+import { ISalesRepObj, SalesRepObj, SalesRepObjs, SalesTable, View, Views } from './viewBonusTable';
 
 
 const localize = nls.loadMessageBundle();
@@ -17,7 +17,7 @@ const CreateNewSeparatorTitle: string = localize('connectionsDialog.newConnectio
 
 export function deactivate() {}
 
-export class DeleteConnection {
+export class SalesRepDelete {
 
     // UI components
     private dialog: azdata.window.Dialog;
@@ -25,7 +25,9 @@ export class DeleteConnection {
 
     // Connection details controls
     private connectionNamesInputBox: azdata.InputBoxComponent;
-    private serverNameField: azdata.InputBoxComponent;    
+    private dateValueInputBox: azdata.InputBoxComponent;   
+    
+    
     private connectionExpressionField: azdata.InputBoxComponent;    
     private databaseNameField: azdata.InputBoxComponent;
     private providerField: azdata.InputBoxComponent;
@@ -38,79 +40,70 @@ export class DeleteConnection {
 
 
     // Model properties
-    private engineType: string
     private connName: string;
-    private selectedPackage!: string;
-    private connectionsMap;
-    private projectMAP: Projects;
-    private connectionName_:string;    
+    private selectedView!: string;
+    private salesRepsMAP: SalesRepObjs;
+    private viewsMAP: Views;
+    private salesRepName_:string;  
+    private salesRepDate: Date;
     private connection_dropdown_name;
-
+    private this.datetoShow: string;
 
 
     private connection: azdata.connection.ConnectionProfile;
 
-    constructor(engineType = "eltSnap", openDialog=true, connection, conName, connectionMap, projectMAP, connection_dropdown_name, project_name) {
-        this.engineType = engineType;
+    constructor(openDialog=true, connection, salesRepName, salesRepDate, connection_dropdown_name, project_name) {
         this.connection = connection;
-        this.connectionsMap = connectionMap;
-        this.projectMAP = projectMAP;
 
-        this.connectionName_ = conName;
-        this.selectedPackage = project_name;
+        this.salesRepName_ = salesRepName;
+        this.salesRepDate = salesRepDate;
+        this.datetoShow = salesRepDate.split(' ')[0]
+        this.selectedView = project_name;
         if (openDialog) {
-            this.openDialog(this.engineType)
+            this.openDialog()
             this.connection_dropdown_name = connection_dropdown_name;           
     }
 }
-    private async deleteConnection(name: string)
+    private async deleteConnection(name: string, date: Date)
     {
-        let project_id = this.projectMAP.getProjectId(this.selectedPackage);
-        let conNames = this.connectionsMap.getConnNames();
-        let f = conNames.filter(nm => nm === name);
-        if(f[0] == name) {
-            let storedProc = `EXEC [elt].[Delete Connection] '${name}', 'OleDb', '${project_id}'`;
+            let storedProc = `  DELETE FROM [dbo].[Bonus_Table] WHERE Sales_Rep ='${name}' AND [Date]='${date}'`;
+           
             let provider: azdata.QueryProvider = azdata.dataprotocol.getProvider < azdata.QueryProvider > (this.connection.providerId, azdata.DataProviderType.QueryProvider);
             let defaultUri = await azdata.connection.getUriForConnection(this.connection.connectionId);
     
             try
             {
+
                 let data = await provider.runQueryString(defaultUri, storedProc);
-
-                vscode.window.showInformationMessage('Connection successfully deleted.');
-                azdata.window.closeDialog(this.dialog);
-                new ConnectionConf(this.engineType, true, this.connection_dropdown_name, this.selectedPackage);
-
                 
-            } catch (error) 
+            } catch (error)
             {
                 vscode.window.showErrorMessage(error.message); 
+                this.dialog.message = {text : "Connection name as such does not exists"}
             }
 
-        }
-
-    else
-     {
-         this.dialog.message = {text : "Connection name as such does not exists"}
-     }
+            vscode.window.showInformationMessage('Sales Rep entry successfully deleted');
+            azdata.window.closeDialog(this.dialog);
+            new SalesTable(true, this.connection_dropdown_name, this.selectedView);
+        }   
         
-    };
+    
 
 
-    private openDialog(engineType: string): void {
+    private openDialog(): void {
 
-        this.dialog = azdata.window.createModelViewDialog("Delete Data connection");
+        this.dialog = azdata.window.createModelViewDialog("Delete Sales Rep entry");
         let packagesTab = azdata.window.createTab(EditDialogTitle);
 
         packagesTab.content = 'getpackage';
         this.dialog.content = [packagesTab];
-        let customButton1 = azdata.window.createButton('Delete Connection');
-        customButton1.onClick(() =>this.connection ?  this.deleteConnection(this.connectionName_) : this.dialog.message ={text: this.NoConnectionObject}        
+        let customButton1 = azdata.window.createButton('Delete');
+        customButton1.onClick(() =>this.connection ?  this.deleteConnection(this.salesRepName_, this.salesRepDate) : this.dialog.message ={text: this.NoConnectionObject}        
     );
 
     let customButton2 = azdata.window.createButton('Cancel');
     customButton2.onClick(
-        ()=> {new ConnectionConf(this.engineType, true, this.connection_dropdown_name, this.selectedPackage);
+        ()=> {new SalesTable(true, this.connection_dropdown_name, this.selectedView);
         azdata.window.closeDialog(this.dialog)
         }
     );
@@ -131,10 +124,19 @@ export class DeleteConnection {
 
 
         this.connectionNamesInputBox = view.modelBuilder.inputBox().withProperties({
-            value: this.connectionName_,
+            value: this.salesRepName_,
             required: true,
-            
         }).component();
+
+
+        this.dateValueInputBox = view.modelBuilder.inputBox().withProperties({
+            value: this.datetoShow,
+            required: true,
+            inputType: 'date'            
+        }).component();
+
+
+
       
 
 
@@ -146,11 +148,17 @@ export class DeleteConnection {
                     
                     {
                         component: this.connectionNamesInputBox,
-                        title: "Connection name"
+                        title: "Sales Rep name"
+                    },
+                    {
+                        component: this.dateValueInputBox,
+                        title: "Entry Date"
                     }
 
+
+
                 ],
-                title: "Delete connection object"
+                title: "Delete Sales Rep entry"
             }
         ]
         ).withLayout({width:400}).component()

@@ -44,14 +44,13 @@ export class SalesRepADD {
     // Model properties
     private viewIdName: string;
     private viewNames: string[];
-    private selectedPackage!: string;
     private viewsMAP: Views;
     private salesRepMAP: SalesRepObjs;
     private salesRepName_:string;
     private bonusValue_:string;
     private commissionPercentValue:string;
     private vRepValue:string;
-    private monthYear_:string;
+    private monthYear_: Date;
     private connectionExpression_: string;
     private connection_dropdown_name;
     private view_dropdown_name;
@@ -66,7 +65,9 @@ export class SalesRepADD {
     constructor(openDialog=true, connection, viewsMAP, salesRepMAP, view_dropdown_name, ISalesRepObj) {
         this.connection = connection;
         this.viewsMAP = viewsMAP;
-        this.viewNames= this.viewsMAP.views.map(m => m.identification_name);
+        this.viewNames= this.viewsMAP.views.map(m => m.identification_name.trim()).filter((v,i) => i > 0);   
+        this.viewNames.unshift("New month entry");
+
         this.salesRepMAP = salesRepMAP;
         if (openDialog) {
             this.openDialog()
@@ -76,10 +77,10 @@ export class SalesRepADD {
             this.bonusValue_ = '';
             this.commissionPercentValue = '';
             this.vRepValue = '';
-            this.monthYear_ = '';
+            this.monthYear_ = null;
             this.connection_dropdown_name = this.connection.connectionName + ' | ' + this.connection.serverName;
-            this.view_dropdown_name = view_dropdown_name;
-            this.salesRepsNames = this.salesRepMAP.salesRepObjects.map(value => (value.salesRep).trim());
+            this.view_dropdown_name = (view_dropdown_name === "All Records") ? this.viewNames[1] : view_dropdown_name;
+            this.salesRepsNames = this.salesRepMAP.salesRepObjects.map(value => (value.salesRep).trim()).filter((v,i,a)=> a.indexOf(v)===i);
             this.ISalesRepObj = ISalesRepObj;
     }
 }
@@ -88,13 +89,10 @@ export class SalesRepADD {
 
 
 
-    private async addSalesRep(name: string,srv: string,db: string,prv: string,ccsname :string)
+    private async addSalesRep(name: string,bonus: string,percentage: string,vrep: string,monthYear :Date)
     {
-        let f = this.salesRepsNames.filter(nm => nm === name);
-        if(f[0] !== name) {
-            this.viewIdName = this.viewIdName === '01' ? '0' : this.viewIdName;
 
-            let storedProc = `EXEC [elt].[Save OleDB Connection] '${name}', '${srv}', '${db}', '${prv}', '${ccsname}', ${this.viewIdName}`;
+            let storedProc = `INSERT INTO dbo.Bonus_Table (Sales_Rep, Bonus,Commission_Percentage,VRep,[Date]) VALUES ('${name}', '${bonus}', cast('${percentage}' as numeric), '${vrep}', '${monthYear}')`;
             let provider: azdata.QueryProvider = azdata.dataprotocol.getProvider < azdata.QueryProvider > (this.connection.providerId, azdata.DataProviderType.QueryProvider);
             let defaultUri = await azdata.connection.getUriForConnection(this.connection.connectionId);
     
@@ -104,21 +102,15 @@ export class SalesRepADD {
 
                 azdata.window.closeDialog(this.dialog);
                 vscode.window.showInformationMessage('Connection successfully updated.');
-                //new ConnectionConf(this.engineType, true, this.connection_dropdown_name, this.project_dropdown_name);
+                new SalesTable(true, this.connection_dropdown_name, this.view_dropdown_name);
 
                 
             } catch (error) 
             {
                 vscode.window.showErrorMessage(error.message); 
+                this.dialog.message = {text : "Sales representative can only have a one value per month, check your data"}
+
             }
-
-        }
-
-    else
-     {
-         this.dialog.message = {text : "Sales representative can only have a one value per month"}
-     }
-        
 
     };
 
@@ -131,27 +123,27 @@ export class SalesRepADD {
         packagesTab.content = 'getpackage';
         this.dialog.content = [packagesTab];
         let customButton1 = azdata.window.createButton('Create');
-/*         customButton1.onClick(() =>this.connection ?  this.addConnection(this.connectionName_,this.serverName_, this.databaseName_
-                ,this.providerField_, this.customConnect_) : this.dialog.message ={text: this.NoConnectionObject}
+        customButton1.onClick(() =>this.connection ?  this.addSalesRep(this.salesRepName_,this.bonusValue_, this.commissionPercentValue
+                ,this.vRepValue, this.monthYear_) : this.dialog.message ={text: this.NoConnectionObject}
         
         
     );
- */      
+       
         this.dialog.registerContent(async (view) => {
             await this.getTabContent(view, 400);
         });
 
         
         let customButton2 = azdata.window.createButton('Cancel');
-       /*  customButton2.onClick(
-           // ()=> {new ConnectionConf(this.engineType, true, this.connection_dropdown_name, this.selectedPackage);
+         customButton2.onClick(
+            ()=> {new SalesTable(true, this.connection_dropdown_name, this.viewIdName);
             azdata.window.closeDialog(this.dialog)
             }
-        ); */
+        ); 
     
         this.dialog.customButtons = [customButton1, customButton2]
         this.dialog.okButton.hidden = true;
-//        this.dialog.cancelButton.hidden = true
+        this.dialog.cancelButton.hidden = true
     
 
         azdata.window.openDialog(this.dialog);
@@ -167,6 +159,8 @@ export class SalesRepADD {
                 editable: true,
             }).component();
         
+        let viewSalesmens = (this.viewsMAP.getViewName(this.view_dropdown_name) as View).salesRepRecords.getConnNames() || [""];
+        this.salesRepNamesInput.values = this.salesRepsNames.filter(array => !viewSalesmens.includes(array));
 
         this.salesRepNamesInput.onValueChanged(value => {
             this.salesRepName_ = value;
@@ -174,17 +168,24 @@ export class SalesRepADD {
 
         
          this.viewNamesDropdown = view.modelBuilder.dropDown().withProperties({
-            value: this.view_dropdown_name
+            value: this.view_dropdown_name,
+            values: this.viewNames
             }).component();
 
+        
+        this.viewNamesDropdown.onValueChanged(viewVal =>{
+            this.view_dropdown_name = viewVal.selected;
+            let viewSalesmens = this.viewsMAP.getViewName(this.view_dropdown_name).salesRepRecords.getConnNames() || [""];
+            this.salesRepNamesInput.values = this.salesRepsNames.filter(array => !viewSalesmens.includes(array));
+            });
 
-        this.viewNamesDropdown.values = this.viewNames;
         this.viewIdName = this.viewsMAP.getProjectId(this.viewNamesDropdown.value as string);
 
 
 
         this.bonusField = view.modelBuilder.inputBox().withProperties({
             value: "",
+            inputType: 'number'
         }).component();
         
         this.bonusField.onTextChanged(value => {
@@ -193,6 +194,8 @@ export class SalesRepADD {
 
         this.commissionPrecentageField = view.modelBuilder.inputBox().withProperties({
             value: "",
+            inputType: 'number'
+
         }).component();
         this.commissionPrecentageField.onTextChanged(value => {
             this.commissionPercentValue = value;
@@ -200,6 +203,7 @@ export class SalesRepADD {
 
         this.vRepField = view.modelBuilder.inputBox().withProperties({
             value: "",
+            inputType: 'number'
         }).component();
         this.vRepField.onTextChanged(value => {
             this.vRepValue = value;
@@ -213,10 +217,11 @@ export class SalesRepADD {
 
         this.monthYearField = view.modelBuilder.inputBox().withProperties({
             value: "",
+            inputType: 'date'
         }).component();
 
         this.monthYearField.onTextChanged(value =>{
-            this.monthYear_ = value.selected;
+            this.monthYear_ = value;
         });
 
 
@@ -253,7 +258,7 @@ export class SalesRepADD {
                     },
                     {
                         component: this.monthYearField,
-                        title: "Month/Year"
+                        title: "Date"
                     }
 
 
