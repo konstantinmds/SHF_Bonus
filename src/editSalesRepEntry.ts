@@ -85,7 +85,7 @@ export class SalesRepEdit {
 
             azdata.window.closeDialog(this.dialog);
             vscode.window.showInformationMessage('Connection successfully updated.');
-            new (this.engineType, true, this.dropdown_name, this.project_dropdown_name);
+            new SalesTable (true, this.dropdown_name, this.project_dropdown_name);
 
             
         } catch (error) 

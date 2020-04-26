@@ -74,9 +74,9 @@ export class SalesRepADD {
                         
             this.viewIdName = '';
             this.salesRepName_ = '';
-            this.bonusValue_ = '';
-            this.commissionPercentValue = '';
-            this.vRepValue = '';
+            this.bonusValue_ = '0';
+            this.commissionPercentValue = '0';
+            this.vRepValue = '0';
             this.monthYear_ = null;
             this.connection_dropdown_name = this.connection.connectionName + ' | ' + this.connection.serverName;
             this.view_dropdown_name = (view_dropdown_name === "All Records") ? this.viewNames[1] : view_dropdown_name;
@@ -102,7 +102,6 @@ export class SalesRepADD {
 
                 azdata.window.closeDialog(this.dialog);
                 vscode.window.showInformationMessage('Connection successfully updated.');
-                new SalesTable(true, this.connection_dropdown_name, this.view_dropdown_name);
 
                 
             } catch (error) 
@@ -111,6 +110,8 @@ export class SalesRepADD {
                 this.dialog.message = {text : "Sales representative can only have a one value per month, check your data"}
 
             }
+            new SalesTable(true, this.connection_dropdown_name, this.view_dropdown_name);
+
 
     };
 
