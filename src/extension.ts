@@ -15,7 +15,7 @@ import { SalesTable } from './viewBonusTable';
 
 export function activate(context: vscode.ExtensionContext) {
 
-    context.subscriptions.push(vscode.commands.registerCommand('extension.CreateConnections', () => {
+    context.subscriptions.push(vscode.commands.registerCommand('extension.CreateviewTable', () => {
         // The code you place here will be executed every time your command is executed
         // Display a message box to the user
         new SalesTable();

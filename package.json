@@ -5,7 +5,7 @@
     "version": "0.0.1",
     "publisher": "BITracks",
     "repository": "",
-    "icon": "images/bitracks.png",
+    "icon": "images/",
     "engines": {
         "vscode": "^1.38.0",
         "azdata": "*"
@@ -14,14 +14,14 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:extension.CreateConnections"
+        "onCommand:extension.CreateviewTable"
     ],
     "main": "./out/extension",
     "contributes": {
         "commands": [
             {
-                "command": "extension.CreateConnections",
-                "title": "eltSnap: Show Connections Dialog"
+                "command": "extension.CreateviewTable",
+                "title": "Schaeffer: Show Bonus table"
             }
         ]
     },

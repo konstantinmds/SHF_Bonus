@@ -98,10 +98,10 @@ export class SalesRepADD {
     
             try
             {
-                let data = await provider.runQueryString(defaultUri, storedProc);
+                let data = await provider.runQueryAndReturn(defaultUri, storedProc);
 
                 azdata.window.closeDialog(this.dialog);
-                vscode.window.showInformationMessage('Connection successfully updated.');
+                vscode.window.showInformationMessage('Record successfully inserted.');
 
                 
             } catch (error) 

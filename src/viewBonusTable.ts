@@ -337,7 +337,7 @@ private async getcreateViewNames(): Promise < Array < string >> {
 
 private openDialog(engineType: string): void {
 
-    this.dialog = azdata.window.createModelViewDialog("Configure data connections");
+    this.dialog = azdata.window.createModelViewDialog("Configure bonus table");
     let packagesTab = azdata.window.createTab(ConfigureDialogTitle);
 
     packagesTab.content = 'getpackage';
@@ -400,6 +400,12 @@ private async getConnections(): Promise < void > {
         }
     });
     this.connections = connections;
+
+    if (this.connections.length <1 ) {
+        vscode.window.showWarningMessage(" You need to make a connecton to your database to be able to see or edit data!")
+        
+    }
+
 }
 
  
