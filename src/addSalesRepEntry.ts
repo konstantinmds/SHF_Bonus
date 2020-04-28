@@ -98,7 +98,7 @@ export class SalesRepADD {
     
             try
             {
-                let data = await provider.runQueryAndReturn(defaultUri, storedProc);
+                let data = await provider.runQueryString(defaultUri, storedProc);
 
                 azdata.window.closeDialog(this.dialog);
                 vscode.window.showInformationMessage('Record successfully inserted.');

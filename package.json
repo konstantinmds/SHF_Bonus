@@ -5,7 +5,7 @@
     "version": "0.0.1",
     "publisher": "BITracks",
     "repository": "",
-    "icon": "images/",
+    "icon": "images/SIR.png",
     "engines": {
         "vscode": "^1.38.0",
         "azdata": "*"
