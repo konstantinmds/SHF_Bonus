@@ -213,7 +213,7 @@ export class SalesTable {
 }
 
 private async getcreateViewNames(): Promise < Array < string >> {
-    var projectQuery: string = `SELECT [Sales Rep],[Bonus],[CommissionPercentage],[VRep],[Month/Year] FROM [dbo].[Bonus] ORDER BY DATE DESC`;
+    var projectQuery: string = `SELECT [Sales Rep],[Bonus],[CommissionPercentage],[VRep],[Month/Year] FROM [dbo].[Bonus] ORDER BY [Month/Year] DESC`;
 
 
     let provider: azdata.QueryProvider = azdata.dataprotocol.getProvider < azdata.QueryProvider > (this.connection.providerId, azdata.DataProviderType.QueryProvider);
@@ -263,7 +263,7 @@ private async getcreateViewNames(): Promise < Array < string >> {
     let projectId = this.viewsMAP.getProjectId(this.view);
     
     
-    var query = `SELECT [Sales Rep],[Bonus],[CommissionPercentage],[VRep],[Month/Year] FROM [dbo].[Bonus] ORDER BY DATE DESC`;
+    var query = `SELECT [Sales Rep],[Bonus],[CommissionPercentage],[VRep],[Month/Year] FROM [dbo].[Bonus] ORDER BY [Month/Year] DESC`;
         
 
     let data: any;
