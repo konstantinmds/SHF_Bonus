@@ -92,13 +92,14 @@ export class SalesRepADD {
     private async addSalesRep(name: string,bonus: string,percentage: string,vrep: string,monthYear :Date)
     {
 
-            let storedProc = `INSERT INTO dbo.Bonus_Table (Sales_Rep, Bonus,Commission_Percentage,VRep,[Date]) VALUES ('${name}', '${bonus}', cast('${percentage}' as numeric), '${vrep}', '${monthYear}')`;
+            let storedProc = `EXEC dbo.AddBonusTableRecord '${name}', '${bonus}', '${percentage}', '${vrep}', '${monthYear}'`;
             let provider: azdata.QueryProvider = azdata.dataprotocol.getProvider < azdata.QueryProvider > (this.connection.providerId, azdata.DataProviderType.QueryProvider);
             let defaultUri = await azdata.connection.getUriForConnection(this.connection.connectionId);
     
             try
             {
-                let data = await provider.runQueryString(defaultUri, storedProc);
+                let data = await provider.runQueryAndReturn(defaultUri, storedProc);
+                data;
 
                 azdata.window.closeDialog(this.dialog);
                 vscode.window.showInformationMessage('Record successfully inserted.');
@@ -107,7 +108,7 @@ export class SalesRepADD {
             } catch (error) 
             {
                 vscode.window.showErrorMessage(error.message); 
-                this.dialog.message = {text : "Sales representative can only have a one value per month, check your data"}
+                this.dialog.message = {text : "Sales representative can only have a one value per month, check validity of your data inputs !"}
 
             }
             new SalesTable(true, this.connection_dropdown_name, this.view_dropdown_name);
@@ -166,7 +167,6 @@ export class SalesRepADD {
         this.salesRepNamesInput.onValueChanged(value => {
             this.salesRepName_ = value;
         });
-
         
          this.viewNamesDropdown = view.modelBuilder.dropDown().withProperties({
             value: this.view_dropdown_name,

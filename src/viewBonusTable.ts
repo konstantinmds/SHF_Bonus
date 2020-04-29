@@ -532,7 +532,7 @@ private async getTabContent(view: azdata.ModelView, componentWidth: number): Pro
 
     if (this.connections.length == 1) {
         this.connection = this.connections[0];
-        let connectionName = this.connection.connectionName + ' | ' + this.connection.serverName;
+        let connectionName = this.connection.connectionName === (this.connection.connectionName + ' | ' + this.connection.serverName) ? this.connection.connectionName : this.connection.connectionName + ' | ' + this.connection.serverName;
         this.connectionDropdown.value = connectionName;
 
         this.viewsMAP = new Views();

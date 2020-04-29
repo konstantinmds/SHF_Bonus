@@ -66,20 +66,21 @@ export class SalesRepDelete {
 }
     private async deleteConnection(name: string, date: Date)
     {
-            let storedProc = `  DELETE FROM [dbo].[Bonus_Table] WHERE Sales_Rep ='${name}' AND [Date]='${date}'`;
-           
+            let storedProc = `EXEC dbo.DeleteBonusTableRecord '${name}','${date}'`;
+
             let provider: azdata.QueryProvider = azdata.dataprotocol.getProvider < azdata.QueryProvider > (this.connection.providerId, azdata.DataProviderType.QueryProvider);
             let defaultUri = await azdata.connection.getUriForConnection(this.connection.connectionId);
     
             try
             {
 
-                let data = await provider.runQueryString(defaultUri, storedProc);
+                let data = await provider.runQueryAndReturn(defaultUri, storedProc);
+
                 
             } catch (error)
             {
                 vscode.window.showErrorMessage(error.message); 
-                this.dialog.message = {text : "Connection name as such does not exists"}
+                this.dialog.message = {text : "Record  as such does not exists"}
             }
 
             vscode.window.showInformationMessage('Sales Rep entry successfully deleted');

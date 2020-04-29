@@ -73,24 +73,25 @@ export class SalesRepEdit {
 
     {
         let monthYear_ = monthYear.toLocaleDateString();
-        let storedProc = `UPDATE dbo.Bonus_Table SET Sales_Rep ='${name}', Bonus='${bonus}',Commission_Percentage='${percentage}',VRep='${vrep}',[Date]='${monthYear_}' 
-        where Sales_Rep='${this.ChosenSalesRepObject.salesRep}' and [Date]='${this.ChosenSalesRepObject.monthYear}'`;
+        let storedProc = `EXEC dbo.EditBonusTableRecord '${name}', '${bonus}', '${percentage}', '${vrep}', '${monthYear_}'`;
 
         let provider: azdata.QueryProvider = azdata.dataprotocol.getProvider < azdata.QueryProvider > (this.connection.providerId, azdata.DataProviderType.QueryProvider);
         let defaultUri = await azdata.connection.getUriForConnection(this.connection.connectionId);
 
         try
         {
-            let data = await provider.runQueryString(defaultUri, storedProc);
+            let data = await provider.runQueryAndReturn(defaultUri, storedProc);
 
             azdata.window.closeDialog(this.dialog);
-            vscode.window.showInformationMessage('Connection successfully updated.');
+            vscode.window.showInformationMessage('Record successfully updated.');
             new SalesTable (true, this.dropdown_name, this.project_dropdown_name);
 
             
         } catch (error) 
         {
             vscode.window.showErrorMessage(error.message); 
+            this.dialog.message = {text : "Check validity of your data inputs !"}
+
         }
 
                 
@@ -160,7 +161,8 @@ export class SalesRepEdit {
         });
 
         this.monthYearField = view.modelBuilder.inputBox().withProperties({
-            inputType: "date" 
+            inputType: "date",
+            enabled: false,
         }).component();
         this.monthYearField.onTextChanged(value => {
             this.monthYearField_ = value;
@@ -173,7 +175,8 @@ export class SalesRepEdit {
         this.connectionName_ =this.ChosenSalesRepObject.salesRep;
         this.bonus_= this.bonusField.value = this.ChosenSalesRepObject.bonus;
         this.commissionPercent_= this.commissionPercentField.value = this.ChosenSalesRepObject.commissionPercentage;
-        this.monthYearField_=this.monthYearField.value = this.ChosenSalesRepObject.monthYear.toString().split(' ')[0];
+        this.monthYearField.value = this.ChosenSalesRepObject.monthYear.toString().split(' ')[0];
+        this.monthYearField_= this.ChosenSalesRepObject.monthYear;
         this.vRep_ = this.vRepField.value = this.ChosenSalesRepObject.vRep;
     
                 
