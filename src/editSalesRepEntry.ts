@@ -69,11 +69,12 @@ export class SalesRepEdit {
     }
 }
 
-    private async updateSalesRep(name: string,bonus: string,percentage: string,vrep: string,monthYear :Date)
+    private async updateSalesRep(name: string,bonus: string,percentage: string,vrep: string,monthYear :string)
 
     {
-        let monthYear_ = monthYear.toLocaleDateString();
+        let monthYear_ = monthYear;
         let storedProc = `EXEC dbo.EditBonusTableRecord '${name}', '${bonus}', '${percentage}', '${vrep}', '${monthYear_}'`;
+        console.log(storedProc);
 
         let provider: azdata.QueryProvider = azdata.dataprotocol.getProvider < azdata.QueryProvider > (this.connection.providerId, azdata.DataProviderType.QueryProvider);
         let defaultUri = await azdata.connection.getUriForConnection(this.connection.connectionId);
@@ -107,7 +108,7 @@ export class SalesRepEdit {
         this.dialog.content = [packagesTab];
         let customButton1 = azdata.window.createButton('Update');
         customButton1.onClick(() =>this.connection ?  this.updateSalesRep(this.connectionName_,this.bonus_,this.commissionPercent_,
-                this.vRep_, new Date(this.monthYearField_)) : this.dialog.message ={text: this.NoConnectionObject}  
+                this.vRep_, this.monthYearField_) : this.dialog.message ={text: this.NoConnectionObject}  
     );
      
         this.dialog.registerContent(async (view) => {

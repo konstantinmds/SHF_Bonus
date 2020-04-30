@@ -91,6 +91,12 @@ export class SalesRepADD {
 
     private async addSalesRep(name: string,bonus: string,percentage: string,vrep: string,monthYear :Date)
     {
+        if (name ===''){
+            this.dialog.message ={text: "Plese press ENTER in the field after defining the new user name"}
+
+        }
+        else
+        {
 
             let storedProc = `EXEC dbo.AddBonusTableRecord '${name}', '${bonus}', '${percentage}', '${vrep}', '${monthYear}'`;
             let provider: azdata.QueryProvider = azdata.dataprotocol.getProvider < azdata.QueryProvider > (this.connection.providerId, azdata.DataProviderType.QueryProvider);
@@ -113,6 +119,7 @@ export class SalesRepADD {
             }
             new SalesTable(true, this.connection_dropdown_name, this.view_dropdown_name);
 
+            }
 
     };
 
@@ -165,7 +172,7 @@ export class SalesRepADD {
         this.salesRepNamesInput.values = this.salesRepsNames.filter(array => !viewSalesmens.includes(array));
 
         this.salesRepNamesInput.onValueChanged(value => {
-            this.salesRepName_ = value;
+            this.salesRepName_ = value.toString();
         });
         
          this.viewNamesDropdown = view.modelBuilder.dropDown().withProperties({

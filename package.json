@@ -2,7 +2,7 @@
     "name": "eltsnap",
     "displayName": "Bonus Table",
     "description": "Work with the SF Bonus table entries",
-    "version": "0.0.2",
+    "version": "0.0.5",
     "publisher": "BITracks",
     "repository": "https://github.com/konstantinmds/SHF_Bonus",
     "icon": "images/SIR.png",
