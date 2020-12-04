@@ -196,7 +196,6 @@ export class SalesTable {
 
 
     constructor(openDialog=true, connection_dropdown = '', view_dropdown = '') {
-        this.getConnections();
         this.getcreateViewNames();
         if (openDialog) {
             this.view = '';
@@ -391,27 +390,32 @@ private openDialog(engineType: string): void {
 
     azdata.window.openDialog(this.dialog);
 }
-private async getConnections(): Promise < void > {
+private async getConnections(): Promise < azdata.connection.ConnectionProfile[] > {
     let availableConnections = await azdata.connection.getConnections(true);
     let connections: azdata.connection.ConnectionProfile[] = [];
-    availableConnections.forEach(element => {
-        if (element.databaseName != "master" && element.databaseName != "model" && element.databaseName != "msdb" && element.databaseName != "tempdb") {
-            connections.push(element);
-        }
-    });
-    this.connections = connections;
 
-    if (this.connections.length <1 ) {
-        vscode.window.showWarningMessage(" You need to make a connecton to your database to be able to see or edit data!")
-        
+    
+    for (let index = 0; index < availableConnections.length; index++) {
+        const element = availableConnections[index];
+        if (element.databaseName !== "master" && element.databaseName !== "model" && element.databaseName !== "msdb" && element.databaseName !== "tempdb") {
+            connections.push(element);        
+        }
     }
 
-}
+    if (connections.length <1 ) {
+        vscode.window.showWarningMessage(" You need to make a connecton to your database to be able to see or edit data!");   
+        return [];
+    }
 
+    return connections;
+}
  
 private async getTabContent(view: azdata.ModelView, componentWidth: number): Promise < void > {
 
     let connectionNames: string[] = [];
+    this.connections = await this.getConnections();
+
+
     connectionNames.push('');
 
       this.connections.forEach(element => {
